@@ -1,3 +1,5 @@
+![img2](https://github.com/roian6/Selenium206/tree/master/img/img2.png)
+
 ## 프로젝트 소개
 2학년 6반 온라인 클래스의 **아주 복잡한** 출석체크 과정을 혁신적으로 단축시켜주는 프로그램입니다.
 
@@ -12,6 +14,8 @@
 2. `chrome://version`에서 내 크롬 버전을 확인합니다. (79, 80, 81 중 하나일 것임.)
 3. `driver_xx` 폴더에서 내 버전에 맞는 크롬 드라이버를 다운로드합니다. [없으면 여기로](https://sites.google.com/a/chromium.org/chromedriver/home)
 4. 다운받은 프로그램과 드라이버를 같은 폴더에 넣고, `206_Online_Class_0.1.exe`를 실행합니다.
+
+![img1](https://github.com/roian6/Selenium206/tree/master/img/img1.png)
 
 ## 이슈 및 문의
 Pull Request 또는 Issue, 귀찮다면 갠톡으로 살포시 연락 주세요.
