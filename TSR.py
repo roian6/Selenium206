@@ -103,7 +103,7 @@ articles_notice = get_articles(base_url + "?menuSn=392079&bbsId=BBSID_000388336"
 articles_start = get_articles(base_url + "?menuSn=407600&bbsId=BBSID_000395982")
 articles_finish = get_articles(base_url + "?menuSn=407624&bbsId=BBSID_000396004")
 
-print("[ 206 EBS Automation Tool 0.1 by 정찬효 ]\n\n")
+print("[ 206 EBS Automation Tool 0.2 by 정찬효 ]\n\n")
 
 if path.exists("user_info.txt"):
     with open('user_info.txt', 'r') as f:
