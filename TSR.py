@@ -13,12 +13,12 @@ import urllib.parse
 import os
 
 
-def start_driver(user_number, user_id, user_pw, article_num):
-    print("출석체크를 시작합니다...")
+def start_driver(user_number, user_id, user_pw, article_num, board_num):
+    print("\n등록을 시작합니다...")
 
     options = webdriver.ChromeOptions()
     options.add_argument('headless')
-    options.add_argument('window-size=1920x1080')
+    options.add_argument('window-size=1920x1440')
     options.add_argument('log-level=3')
     options.add_argument(
         "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -40,18 +40,36 @@ def start_driver(user_number, user_id, user_pw, article_num):
 
     print("학급 게시판에 접속하고 있습니다...")
     driver.refresh()
-    driver.get("https://hoc22.ebssw.kr/sunrin206/hmpg/hmpgBbsDetailView.do?menuSn=407600&bbsId=BBSID_000395982"
-               "&bbscttSn=" + article_num)
+
+    url = "https://hoc22.ebssw.kr/sunrin206/hmpg/hmpgBbsDetailView.do"
+
+    if board_num == 1:
+        url += "?menuSn=392079&bbsId=BBSID_000388336"
+    elif board_num == 2:
+        url += "?menuSn=407600&bbsId=BBSID_000395982"
+    else:
+        url += "?menuSn=407624&bbsId=BBSID_000396004"
+
+    driver.get(url + "&bbscttSn=" + article_num)
 
     print("댓글을 작성하고 있습니다...")
     input_board_comment = driver.find_element(By.NAME, "cmmntsCn")
     btn_board_submit = driver.find_element(By.CLASS_NAME, "submit")
 
-    input_board_comment.send_keys(user_number + "번 학습시작")
+    if board_num == 1:
+        comment = user_number + "번"
+    elif board_num == 2:
+        comment = user_number + "번 학습시작"
+    else:
+        comment = user_number + "번 학습완료"
+
+    input_board_comment.send_keys(comment)
     btn_board_submit.click()
 
     alert_board_comment = driver.switch_to.alert
     alert_board_comment.accept()
+
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//a[@class='txt_violet fr']")))
 
     if path.exists("screenshot.png"):
         os.remove("screenshot.png")
@@ -67,12 +85,23 @@ def start_driver(user_number, user_id, user_pw, article_num):
     os._exit(0)
 
 
-print("프로그램 실행 준비중...\n")
-board_url = "https://hoc22.ebssw.kr/sunrin206/hmpg/hmpgBbsListView.do?menuSn=407600&bbsId=BBSID_000395982"
-with urllib.request.urlopen(board_url) as response:
-    html = response.read()
+def get_articles(url):
+    with urllib.request.urlopen(url) as response:
+        html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
-    articles = soup.find_all("a", {"class": "class_nm_ellipsis"})
+    return soup.find_all("a", {"class": "class_nm_ellipsis"})
+
+
+def print_articles(articles):
+    for i, article in enumerate(articles, start=1):
+        print(str(i) + ". " + article.text.strip())
+
+
+print("프로그램 실행 준비중...\n")
+base_url = "https://hoc22.ebssw.kr/sunrin206/hmpg/hmpgBbsListView.do"
+articles_notice = get_articles(base_url + "?menuSn=392079&bbsId=BBSID_000388336")
+articles_start = get_articles(base_url + "?menuSn=407600&bbsId=BBSID_000395982")
+articles_finish = get_articles(base_url + "?menuSn=407624&bbsId=BBSID_000396004")
 
 print("[ 206 EBS Automation Tool 0.1 by 정찬효 ]\n\n")
 
@@ -95,20 +124,35 @@ else:
         f.write(student_number + "," + student_id + "," + student_pw)
     print("\n유저 정보가 저장되었습니다! user_info.txt 에서 수정할 수 있습니다.")
 
-print("\n\n출석할 게시물의 번호를 입력해 주세요.\n")
-for i, article in enumerate(articles, start=1):
-    print(str(i) + ". " + article.text.strip())
-article_number = articles[int(input()) - 1].get("href").split("\'")[1]
+print("\n[1. 조회, 종례 게시판] - 아직 지원하지 않음\n")
+print_articles(articles_notice)
+print("\n[2. 일일 출결 게시판] - 00번 학습시작\n")
+print_articles(articles_start)
+print("\n[3. 일일 학습완료 게시판] - 00번 학습완료\n")
+print_articles(articles_finish)
 
-print("\n지금 바로 출석할까요? N을 입력하면 출석 시간을 예약할 수 있습니다. (Y,N)")
+print("\n\n원하는 게시판의 번호를 입력해 주세요.")
+board_input = int(input())
+if board_input == 1:
+    selected_articles = articles_notice
+elif board_input == 2:
+    selected_articles = articles_start
+else:
+    selected_articles = articles_finish
+
+print("\n원하는 게시물의 번호를 입력해 주세요.")
+article_number = selected_articles[int(input()) - 1].get("href").split("\'")[1]
+
+print("\n지금 바로 등록할까요? N을 입력하면 시간을 예약할 수 있습니다. (Y,N)")
 now_or_later = input()
 if now_or_later == 'y' or now_or_later == 'Y':
-    start_driver(student_number, student_id, student_pw, article_number)
+    start_driver(student_number, student_id, student_pw, article_number, board_input)
 else:
     print("\n예약 시간을 입력해 주세요. (예시: 2020-04-16 06:00:00)")
     date_input = input()
-    print(date_input + "에 출석이 진행됩니다. 프로그램을 종료하지 마세요...")
+    print(date_input + "에 등록이 진행됩니다. 프로그램을 종료하지 마세요...")
     scheduler = BlockingScheduler()
     trigger = DateTrigger(run_date=date_input)
-    scheduler.add_job(lambda: start_driver(student_number, student_id, student_pw, article_number), trigger)
+    scheduler.add_job(lambda: start_driver(student_number, student_id, student_pw, article_number, board_input),
+                      trigger)
     scheduler.start()
