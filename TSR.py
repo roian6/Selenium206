@@ -8,10 +8,11 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from bs4 import BeautifulSoup
 from os import path
 from PIL import Image
-import urllib.request
-import urllib.parse
+from urllib.request import Request, urlopen
 import os
 
+
+# To Build: pyinstaller --onefile TSR.py --ico=icon.ico
 
 def start_driver(user_number, user_id, user_pw, article_num, board_num):
     print("\n등록을 시작합니다...")
@@ -86,7 +87,8 @@ def start_driver(user_number, user_id, user_pw, article_num, board_num):
 
 
 def get_articles(url):
-    with urllib.request.urlopen(url) as response:
+    header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko)'}
+    with urlopen(Request(url, headers=header)) as response:
         html = response.read()
     soup = BeautifulSoup(html, 'html.parser')
     return soup.find_all("a", {"class": "class_nm_ellipsis"})
@@ -103,7 +105,7 @@ articles_notice = get_articles(base_url + "?menuSn=392079&bbsId=BBSID_000388336"
 articles_start = get_articles(base_url + "?menuSn=407600&bbsId=BBSID_000395982")
 articles_finish = get_articles(base_url + "?menuSn=407624&bbsId=BBSID_000396004")
 
-print("[ 206 EBS Automation Tool 0.2 by 정찬효 ]\n\n")
+print("[ 206 EBS Automation Tool 0.3 by 정찬효 ]\n")
 
 if path.exists("user_info.txt"):
     with open('user_info.txt', 'r') as f:
@@ -124,26 +126,29 @@ else:
         f.write(student_number + "," + student_id + "," + student_pw)
     print("\n유저 정보가 저장되었습니다! user_info.txt 에서 수정할 수 있습니다.")
 
-print("\n[1. 조회, 종례 게시판] - 아직 지원하지 않음\n")
-print_articles(articles_notice)
-print("\n[2. 일일 출결 게시판] - 00번 학습시작\n")
-print_articles(articles_start)
-print("\n[3. 일일 학습완료 게시판] - 00번 학습완료\n")
-print_articles(articles_finish)
+print("\n[1. 조회, 종례 게시판] (댓글 형식: 00번)\n")
 
-print("\n\n원하는 게시판의 번호를 입력해 주세요.")
+print("[2. 일일 출결 게시판] (댓글 형식: 00번 학습시작)\n")
+
+print("[3. 일일 학습완료 게시판] (댓글 형식: 00번 학습완료)\n")
+
+
+print("\n원하는 게시판의 번호를 입력해 주세요.")
 board_input = int(input())
 if board_input == 1:
     selected_articles = articles_notice
+    print_articles(articles_notice)
 elif board_input == 2:
     selected_articles = articles_start
+    print_articles(articles_start)
 else:
     selected_articles = articles_finish
+    print_articles(articles_finish)
 
 print("\n원하는 게시물의 번호를 입력해 주세요.")
 article_number = selected_articles[int(input()) - 1].get("href").split("\'")[1]
 
-print("\n지금 바로 등록할까요? N을 입력하면 시간을 예약할 수 있습니다. (Y,N)")
+print("\n지금 바로 등록할까요? N을 입력하면 시간을 예약할 수 있습니다. (Y/N)")
 now_or_later = input()
 if now_or_later == 'y' or now_or_later == 'Y':
     start_driver(student_number, student_id, student_pw, article_number, board_input)
